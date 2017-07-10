@@ -4,58 +4,65 @@ import Search from './Search'
 
 class AccountContainer extends Component {
 
-  constructor() {
-    super()
-
-    // we have provided this default state for you,
-    // use this to get the functionality working
-    // and then replace the default transactions with a call to the API
-
-    this.state = {
+  state = {
       searchTerm: '',
-      transactions: [
-        {
-          id: 1,
-          posted_at: "2017-02-28 11:00:00",
-          description: "Leather Pants, Gap co.",
-          category: "Fashion",
-          amount: -20000
-        },
-        {
-          id: 2,
-          posted_at: "2017-02-29 10:30:00",
-          description: "Paycheck from Bob's Burgers",
-          category: "Income",
-          amount: 100000
-        },
-        {
-          id: 3,
-          posted_at: "2017-05-24 10:53:00",
-          description: "'Pair Programming Illuminated' by Laurie Williams and Robert Kessler",
-          category: "Book",
-          amount: 1498
-        },
-        {
-          id: 4,
-          posted_at: "2017-05-24 08:52:00",
-          description: "Medium Iced Cold Brew, Gregory's Coffee",
-          category: "Coffee",
-          amount: 365
-        }
-      ]
+      transactions: [],
+      filteredTransactions: []
     }
+
+  componentWillMount () {
+    this.getTransactions()
   }
 
-  handleChange(event) {
-    // your code here
+  getTransactions () {
+    const baseUrl = 'https://boiling-brook-94902.herokuapp.com/'
+
+    fetch(baseUrl + 'transactions')
+      .then(resp => resp.json())
+      .then(json => this.updateTransactions(json))
   }
 
-  render() {
+  updateTransactions (data) {
+    this.setState({
+      transactions: data,
+      filteredTransactions: data
+    })
+  }
 
+  updateSearchTerm (searchTerm) {
+    this.setState({
+      searchTerm: searchTerm
+    })
+  }
+
+  updateFilteredTransactions (filteredTransactions) {
+    this.setState({
+      filteredTransactions: filteredTransactions
+    })
+  }
+
+  filterTransactions (searchTerm) {
+    const transactions = this.state.transactions
+
+    let filteredTransactions = transactions.filter(transaction => {
+      return searchTerm === '' ? transactions : (transaction.description.toLowerCase().includes(searchTerm.toLowerCase()) || transaction.category.toLowerCase().includes(searchTerm.toLowerCase()))
+    })
+
+    this.updateFilteredTransactions(filteredTransactions)
+  }
+
+  handleChange = (event) => {
+    const searchTerm = event.target.value
+
+    this.updateSearchTerm(searchTerm)
+    this.filterTransactions(searchTerm)
+  }
+
+  render () {
     return (
       <div>
-        <Search searchTerm={this.state.searchTerm} handleChange={"...add code here..."} />
-        <TransactionsList transactions={this.state.transactions} searchTerm={this.state.searchTerm} />
+        <Search searchTerm={this.state.searchTerm} handleChange={this.handleChange} />
+        <TransactionsList transactions={this.state.filteredTransactions} searchTerm={this.state.searchTerm} />
       </div>
     )
   }
